@@ -1,176 +1,169 @@
-"use strict";
+'use strict';
 
-var EXPORTED_SYMBOLS = ["SSleuthPreferences",
-              "ssleuthPrefListener"];
+var EXPORTED_SYMBOLS = ['preferences'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://ssleuth/cipher-suites.js");
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://ssleuth/cipher-suites.js');
 
-var ssleuthPanelInfo = {
-  keyExchange: true,
-  authAlg: true,
-  bulkCipher: true,
-  HMAC: true,
-  certValidity: true,
-  validityTime: true,
-  certFingerprint: false
-};
+var preferences = (function () {
 
-var ssleuthDefaultPrefs = {
-  PREF_BRANCH: "extensions.ssleuth.",
-  PREFS: {
-    "notifier.location": 0,
-    "panel.fontsize": 1,
-    "ui.keyshortcut": "control shift }",
-    "ui.urlbar.colorize": false,
-    "rating.params": ssleuthConnectionRating,
-    "rating.ciphersuite.params": ssleuthCipherSuites.weighting,
-    "suites.toggle": ffToggleDefault,
-    "panel.info": ssleuthPanelInfo,
-    "domains.observe": true
-  }
-};
-
-var SSleuthPreferences = {
-  prefBranch: ssleuthDefaultPrefs.PREF_BRANCH,
-  prefService: null,
-
-  init: function () {
-    this.setDefaultPreferences();
-    this.prefService =
-      Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  },
-
-  uninit: function () {
-    this.closeTab();
-  },
-
-  setDefaultPreferences: function () {
-    let sp = ssleuthDefaultPrefs;
-    let branch = Services.prefs.getDefaultBranch(sp.PREF_BRANCH);
-    for (let [key, val] in Iterator(sp.PREFS)) {
-      switch (typeof val) {
-      case "boolean":
-        branch.setBoolPref(key, val);
-        break;
-      case "number":
-        branch.setIntPref(key, val);
-        break;
-      case "string":
-        branch.setCharPref(key, val);
-        break;
-      case "object":
-        branch.setCharPref(key, JSON.stringify(val));
-      }
-    }
-  },
-
-  openTab: function (index) {
-
-    const win = Services.wm.getMostRecentWindow("navigator:browser");
-
-    if (null == this.prefsTab || this.prefsTabWin.closed) {
-      var prefsTab =
-        win.gBrowser.loadOneTab(
-          "chrome://ssleuth/content/preferences.xul", {
-            inBackground: false
-          });
-      this.prefsTab = prefsTab;
-      this.prefsTabWin = win;
-      // TODO : Remove event listeners from inside
-      prefsTab.addEventListener("TabClose", function () {
-        SSleuthPreferences.prefsTab = null;
-        SSleuthPreferences.prefsTabWin = null;
-      }, false);
-      win.addEventListener("unload", function winUnload() {
-        if (SSleuthPreferences) {
-          SSleuthPreferences.prefsTab = null;
-          SSleuthPreferences.prefsTabWin = null;
+    var defaultPreferences = {
+        'notifier.location': 0,
+        'panel.fontsize': 1,
+        'ui.keyshortcut': 'control shift }',
+        'ui.urlbar.colorize': false,
+        'ui.notifier.colorize': false,
+        'rating.params': connectionRating,
+        'rating.ciphersuite.params': ciphersuites.weighting,
+        'suites.toggle': ffToggleDefault,
+        'panel.info': {
+            keyExchange: true,
+            authAlg: true,
+            bulkCipher: true,
+            HMAC: true,
+            certValidity: true,
+            validityTime: false,
+            certFingerprint: false
         }
-      }, false);
-    } else {
-      this.prefsTabWin.gBrowser.selectedTab = this.prefsTab;
-      this.prefsTabWin.focus();
-    }
+    };
 
-    var event = new this.prefsTab.linkedBrowser
-      .contentWindow.CustomEvent("ssleuth-prefwindow-index", {
-        "detail": index
-      });
-    this.prefsTab.linkedBrowser.contentWindow.dispatchEvent(event);
-    // This event won't be received for the first time - can't sync 
-    // with 'load' ?
-    // Doing a load event listener and sending the event will bring 
-    // other problems
-    //   - Will not receive the 'load' if the tab is already in focus.
-    //   - Won't get the first event again, if we remove the event listener 
-    //     from inside.
-    // So send the tab index in a storage for the first time.
-    let application =
-      Cc["@mozilla.org/fuel/application;1"].getService(Ci.fuelIApplication);
-    application.storage.set("ssleuth.prefwindow.tabindex", index);
-  },
+    var BRANCH = 'extensions.ssleuth.',
+        TLS = 'security.ssl3.',
+        service = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefBranch),
+        _branch,
+        _callback,
+        prefsTab = null,
+        prefsTabWin = null;
 
-  closeTab: function () {
-    const prefsTab = this.prefsTab;
-    if (prefsTab) {
-      this.prefsTabWin.gBrowser.removeTab(prefsTab);
-      this.prefsTab = null;
-      this.prefsTabWin = null;
-    }
-  },
+    var init = function (callback) {
 
-  readInitPreferences: function () {
-    const prefs = SSleuthPreferences.prefService;
-    var sp = ssleuthDefaultPrefs;
-    for (let [key, val] in Iterator(sp.PREFS)) {
-      switch (typeof val) {
-      case "boolean":
-        sp.PREFS[key] = prefs.getBoolPref(sp.PREF_BRANCH + key);
-        break;
-      case "number":
-        sp.PREFS[key] = prefs.getIntPref(sp.PREF_BRANCH + key);
-        break;
-      case "string":
-        sp.PREFS[key] = prefs.getCharPref(sp.PREF_BRANCH + key);
-        break;
-      case "object":
-        sp.PREFS[key] = JSON.parse(prefs.getCharPref(sp.PREF_BRANCH + key));
-      }
-    }
-    return sp;
-  }
-};
+        setDefaultPreferences();
 
-function ssleuthPrefListener(branch_name, callback) {
-  var prefService = Cc["@mozilla.org/preferences-service;1"]
-    .getService(Ci.nsIPrefService);
-  this._branch = prefService.getBranch(branch_name);
-  this._branch.QueryInterface(Ci.nsIPrefBranch2);
-  this._callback = callback;
-}
+        _branch = service.getBranch(BRANCH);
+        _branch.QueryInterface(Ci.nsIPrefBranch2);
+        _callback = callback;
 
-ssleuthPrefListener.prototype.observe = function (subject, topic, data) {
-  if (topic == 'nsPref:changed')
-    this._callback(this._branch, data);
-};
+        _branch.addObserver('', listener, false);
 
-ssleuthPrefListener.prototype.register = function (trigger) {
-  this._branch.addObserver('', this, false);
-  if (trigger) {
-    let that = this;
-    this._branch.getChildList('', {}).
-    forEach(function (pref_leaf_name) {
-      that._callback(that._branch, pref_leaf_name);
-    });
-  }
-};
+        return readInitPreferences();
+    };
 
-ssleuthPrefListener.prototype.unregister = function () {
-  if (this._branch)
-    this._branch.removeObserver('', this);
-};
+    var uninit = function () {
+        closeTab();
+        if (_branch) {
+            _branch.removeObserver('', listener);
+        }
+    };
+
+    var setDefaultPreferences = function () {
+        let sp = defaultPreferences;
+        let branch = Services.prefs.getDefaultBranch(BRANCH);
+        for (let [key, val] in Iterator(sp)) {
+            switch (typeof val) {
+            case 'boolean':
+                branch.setBoolPref(key, val);
+                break;
+            case 'number':
+                branch.setIntPref(key, val);
+                break;
+            case 'string':
+                branch.setCharPref(key, val);
+                break;
+            case 'object':
+                branch.setCharPref(key, JSON.stringify(val));
+            }
+        }
+    };
+
+    var readInitPreferences = function () {
+        var sp = defaultPreferences;
+        for (let [key, val] in Iterator(sp)) {
+            switch (typeof val) {
+            case 'boolean':
+                sp[key] = service.getBoolPref(BRANCH + key);
+                break;
+            case 'number':
+                sp[key] = service.getIntPref(BRANCH + key);
+                break;
+            case 'string':
+                sp[key] = service.getCharPref(BRANCH + key);
+                break;
+            case 'object':
+                sp[key] = JSON.parse(service.getCharPref(BRANCH + key));
+            }
+        }
+        return sp;
+    };
+
+    var openTab = function (index) {
+
+        const win = Services.wm.getMostRecentWindow('navigator:browser');
+
+        if (null == prefsTab || prefsTabWin.closed) {
+
+            prefsTab = win.gBrowser.loadOneTab(
+                'chrome://ssleuth/content/preferences.xul', {
+                    inBackground: false
+                });
+            prefsTabWin = win;
+
+            var prefsTabClosed = function (evt) {
+                if (evt.target)
+                    evt.target.removeEventListener('TabClose', prefsTabClosed);
+                prefsTab = null;
+                prefsTabWin = null;
+            };
+
+            prefsTab.addEventListener('TabClose', prefsTabClosed, false);
+            win.addEventListener('unload', prefsTabClosed, false);
+
+        } else {
+            prefsTabWin.gBrowser.selectedTab = prefsTab;
+            prefsTabWin.focus();
+        }
+
+        var event = new prefsTab.linkedBrowser
+            .contentWindow.CustomEvent('ssleuth-prefwindow-index', {
+                'detail': index
+            });
+
+        prefsTab.linkedBrowser.contentWindow.dispatchEvent(event);
+        // This event won't be received for the first time - possible delay w.r.t 'load'
+        // Doing a load event listener and sending the event will bring 
+        // other problems
+        //   - Will not receive the 'load' if the tab is already in focus.
+        //   - Won't get the first event again, if we remove the event listener 
+        //     from inside.
+        // So send the tab index in a storage for the first time.
+    };
+
+    var closeTab = function () {
+        if (prefsTab) {
+            prefsTabWin.gBrowser.removeTab(prefsTab);
+            prefsTab = null;
+            prefsTabWin = null;
+        }
+    };
+
+    var listener = {
+        observe: function (subject, topic, data) {
+            if (topic === 'nsPref:changed')
+                _callback(_branch, data);
+        }
+    };
+
+    return {
+        init: init,
+        uninit: uninit,
+        openTab: openTab,
+        BRANCH: BRANCH,
+        TLS: TLS,
+        service: service
+    };
+
+}());

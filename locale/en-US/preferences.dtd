@@ -27,13 +27,12 @@
 <!ENTITY ssleuth.pref.panel.hmac "Show HMAC" >
 <!ENTITY ssleuth.pref.panel.validity "Show validity" >
 <!ENTITY ssleuth.pref.panel.validitytime "Show GMT/UTC time in validity" >
-<!ENTITY ssleuth.pref.panel.fingerprint "Show SHA-1 fingerprint" >
+<!ENTITY ssleuth.pref.panel.fingerprint "Show SHA-2 fingerprint" >
 
 <!ENTITY ssleuth.pref.ui.urlbar "URL bar" >
 <!ENTITY ssleuth.pref.ui.urlbar.colorize "Colorize : Adds a color gradient in the address bar as per the rating" >
 
 <!ENTITY ssleuth.pref.panel.domainstab "Domains tab" >
-<!ENTITY ssleuth.pref.panel.domains.observer "Domains observer : Enable monitoring requests per domain" >
 
 <!-- Configure rating -->
 
@@ -73,6 +72,7 @@
 
 <!ENTITY ssleuth.pref.ciphersuites.reset.title "Reset settings" >
 <!ENTITY ssleuth.pref.ciphersuites.reset.desc "Reset all the cipher suites states to their firefox default values" >
+<!ENTITY ssleuth.pref.ciphersuites.wiki "Project wiki - Cipher suites enabling and disabling." >
 
 <!ENTITY ssleuth.pref.ui.button.restore "Restore lists" >
 <!ENTITY ssleuth.pref.ui.button.resetall "Reset all" >
@@ -91,3 +91,4 @@
 <!ENTITY ssleuth.pref.ui.button.edit "Edit" >
 <!ENTITY ssleuth.pref.ui.button.remove "Remove" >
 
+<!ENTITY ssleuth.pref.ui.notifier.colorize "Notifier colorize : Enables color gradient for notification icon area." >

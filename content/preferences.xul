@@ -126,12 +126,9 @@
 						<caption label="&ssleuth.pref.ui.urlbar;"/>
             <checkbox id="ssleuth-pref-show-urlbar-gradient"
                 label="&ssleuth.pref.ui.urlbar.colorize;" />
+            <checkbox id="ssleuth-pref-show-notifier-gradient"
+                label="&ssleuth.pref.ui.notifier.colorize;" />
  					</groupbox>
-					<groupbox>
-						<caption label="&ssleuth.pref.panel.domainstab; (Beta)"/>
-             <checkbox id="ssleuth-pref-show-domains-observe"
-                label="&ssleuth.pref.panel.domains.observer;" />
-					</groupbox>
 
 					</vbox>
 				</scrollbox>
@@ -310,7 +307,7 @@
 						<caption label="&ssleuth.pref.ciphersuites.note.title;"/>
 						<label class="text-link" 
 														href="https://github.com/sibiantony/ssleuth/wiki/Cipher-suites-enabling-and-disabling"
-														value="Project wiki - Cipher suites enabling and disabling."/>
+														value="&ssleuth.pref.ciphersuites.wiki;"/>
 						<html:ul>
 							<html:li>&ssleuth.pref.ciphersuites.note.1;</html:li>
 							<html:li>&ssleuth.pref.ciphersuites.note.2;</html:li>
@@ -346,7 +343,7 @@
 										active="true">
 				<vbox class="ssleuth-pref-view-container">
 					<groupbox>
-						<caption label="SSleuth v0.3.4"/>
+						<caption label="SSleuth v0.5.1"/>
 						<description value="&ssleuth.pref.about.author; Sibi Antony"/>
 						<description class="ssleuth-pref-text" >
 								Your feedback and development/translation support are welcome.
@@ -358,9 +355,11 @@
 					</groupbox>
 					<groupbox>
 						<caption label='&ssleuth.pref.about.thanks;' />
-							<description value=' • John Souvestre (beta tests)'/>
+							<description value=' • John Souvestre (beta tests, v0.3.1)'/>
 							<description value='&ssleuth.pref.about.translations;'/>
 							<description value=' • Jei Four (de-DE)' />
+							<description value=' • Thomas PORTASSAU (fr-FR) 0.4.x' />
+							<description value=' • devmapper0 (pl-PL)' />
 					</groupbox>
 
 					<groupbox>
@@ -376,6 +375,13 @@
 							This software is distributed in the hope that it will be useful, 
 							but WITHOUT ANY WARRANTY. See the GNU General Public License for more details.
 						</description>
+
+						<description value=""/>
+
+						<description class="ssleuth-pref-text">
+							Jdenticon 1.3.2 zlib license, jdenticon.com (c) Daniel Mester Pirttijärvi
+						</description>
+
 
 					</groupbox>
 				</vbox>
